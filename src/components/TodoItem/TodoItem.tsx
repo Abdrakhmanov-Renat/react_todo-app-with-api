@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Todo } from '../../types/Todo';
 
 interface Props {
@@ -15,6 +15,10 @@ export const TodoItem: React.FC<Props> = ({
 }) => {
   const [isChecked, setIsChecked] = useState(todo.completed);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setIsChecked(todo.completed);
+  }, [todo.completed]);
 
   const handleChange = (changedTodo: Todo) => {
     setIsLoading(true);

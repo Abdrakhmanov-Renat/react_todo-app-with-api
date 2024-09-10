@@ -12,6 +12,7 @@ import { Filter } from './types/Filter';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
+  // const [loadingIds, setLoadingIds] = useState<number[]>([]);
   const [filterTodos, setFilterTodos] = useState<Filter>(Filter.ALL);
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
 
@@ -155,11 +156,20 @@ export const App: React.FC = () => {
   };
 
   const deleteCompleted = (completed: Todo[]) => {
-    for (const completedTodo of completed) {
-      if (completedTodo.completed) {
-        deleteTodo(completedTodo.id);
-      }
-    }
+    // for (const completedTodo of completed) {
+    //   if (completedTodo.completed) {
+    //     deleteTodo(completedTodo.id);
+    //   }
+    // }
+    Promise.all(
+      completed.map(todo =>
+        service.deleteTodos(todo.id).then(() => {
+          setTodos(currentTodos => currentTodos.filter(t => t.id !== todo.id));
+        }),
+      ),
+    ).catch(() => {
+      setErrorMessage('Unable to delete a todo');
+    });
   };
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -172,12 +182,27 @@ export const App: React.FC = () => {
     setErrorMessage('');
   };
 
-  const clearCompleted = (cleared: Todo[]) => {
-    for (const clearedTodo of cleared) {
-      if (clearedTodo.completed) {
-        updateTodo(clearedTodo);
-      }
-    }
+  const toggleAllTodos = () => {
+    const allCompleted = todos.every(todo => todo.completed);
+    const newStatus = !allCompleted;
+
+    const todosToUpdate = todos.filter(todo => todo.completed !== newStatus);
+
+    Promise.all(
+      todosToUpdate.map(todo =>
+        service
+          .updateTodos({ ...todo, completed: newStatus })
+          .then(updatedTodo => {
+            setTodos(currentTodos =>
+              currentTodos.map(t =>
+                t.id === updatedTodo.id ? updatedTodo : t,
+              ),
+            );
+          }),
+      ),
+    ).catch(() => {
+      setErrorMessage('Unable to update a todo');
+    });
   };
 
   return (
@@ -194,7 +219,7 @@ export const App: React.FC = () => {
                 active: completedTodos.length === todos.length,
               })}
               data-cy="ToggleAllButton"
-              onClick={() => clearCompleted(todos)}
+              onClick={toggleAllTodos}
             />
           )}
 
