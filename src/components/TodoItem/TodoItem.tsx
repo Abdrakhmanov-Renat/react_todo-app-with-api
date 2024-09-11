@@ -6,39 +6,77 @@ interface Props {
   todo: Todo;
   onDelete?: (todoId: number) => Promise<void>;
   onUpdate?: (todo: Todo) => Promise<void>;
+  isLoading?: boolean;
 }
 
 export const TodoItem: React.FC<Props> = ({
   todo,
   onDelete = () => Promise.resolve(),
   onUpdate = () => Promise.resolve(),
+  isLoading,
 }) => {
   const [isChecked, setIsChecked] = useState(todo.completed);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLocalLoading, setIsLocalLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const [tempTitle, setTempTitle] = useState(todo.title);
 
   useEffect(() => {
     setIsChecked(todo.completed);
   }, [todo.completed]);
 
-  const handleChange = (changedTodo: Todo) => {
-    setIsLoading(true);
+  // #region eventHandlers
 
-    onUpdate(changedTodo)
+  const handleChange = (changedTodo: Todo) => {
+    setIsLocalLoading(true);
+
+    onUpdate({ ...changedTodo, completed: !changedTodo.completed })
       .then(() => {
         setIsChecked(!changedTodo.completed);
       })
       .finally(() => {
-        setIsLoading(false);
+        setIsLocalLoading(false);
       });
   };
 
   const handleDelete = () => {
-    setIsLoading(true);
+    setIsLocalLoading(true);
 
     onDelete(todo.id).finally(() => {
-      setIsLoading(false);
+      setIsLocalLoading(false);
     });
   };
+
+  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTempTitle(event.target.value);
+  };
+
+  const handleSubmit = () => {
+    setIsLocalLoading(true);
+
+    if (tempTitle.trim() === todo.title) {
+      setIsLocalLoading(false);
+      setIsEditing(false);
+
+      return;
+    }
+
+    if (tempTitle.trim()) {
+      onUpdate({ ...todo, title: tempTitle }).finally(() => {
+        setIsLocalLoading(false);
+      });
+    } else {
+      onDelete(todo.id).finally(() => {
+        setIsLocalLoading(false);
+      });
+    }
+
+    setIsEditing(false);
+  };
+
+  // #endregion
+
+  const isTodoLoading = isLoading || isLocalLoading;
 
   return (
     <div
@@ -57,29 +95,52 @@ export const TodoItem: React.FC<Props> = ({
           onChange={() => {
             handleChange(todo);
           }}
+          onDoubleClick={() => {
+            setIsEditing(true);
+          }}
         />
       </label>
 
-      <span data-cy="TodoTitle" className="todo__title">
-        {todo.title}
-      </span>
+      {!isEditing ? (
+        <>
+          <span
+            data-cy="TodoTitle"
+            className="todo__title"
+            onDoubleClick={() => {
+              setIsEditing(true);
+            }}
+          >
+            {todo.title}
+          </span>
 
-      {/* Remove button appears only on hover */}
-      <button
-        type="button"
-        className="todo__remove"
-        data-cy="TodoDelete"
-        onClick={handleDelete}
-      >
-        ×
-      </button>
+          <button
+            type="button"
+            className="todo__remove"
+            data-cy="TodoDelete"
+            onClick={handleDelete}
+          >
+            ×
+          </button>
+        </>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <input
+            data-cy="TodoTitleField"
+            type="text"
+            className="todo__title-field"
+            placeholder="Empty todo will be deleted"
+            value={tempTitle}
+            onChange={handleTitleChange}
+            onBlur={handleSubmit}
+            autoFocus
+          />
+        </form>
+      )}
 
-      {/* overlay will cover the todo while it is being deleted or updated */}
       <div
         data-cy="TodoLoader"
-        // className="modal overlay"
         className={classNames('modal overlay', {
-          'is-active': isLoading || todo.id === 0,
+          'is-active': isTodoLoading || todo.id === 0,
         })}
       >
         <div className="modal-background has-background-white-ter" />
