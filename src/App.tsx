@@ -1,14 +1,15 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
 import React, { useEffect, useRef, useState } from 'react';
-import classNames from 'classnames';
 
 import { UserWarning } from './UserWarning';
 import * as service from './api/todos';
 import { Todo } from './types/Todo';
-import { TodoItem } from './components/TodoItem/TodoItem';
 import { Footer } from './components/Footer';
+import { Header } from './components/Header';
 import { Filter } from './types/Filter';
+import { TodoList } from './components/TodoList';
+import { ErrorMessage } from './components/ErrorMessage';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -221,44 +222,24 @@ export const App: React.FC = () => {
       <h1 className="todoapp__title">todos</h1>
 
       <div className="todoapp__content">
-        <header className="todoapp__header">
-          {!!todos.length && (
-            <button
-              type="button"
-              className={classNames('todoapp__toggle-all', {
-                active: completedTodos.length === todos.length,
-              })}
-              data-cy="ToggleAllButton"
-              onClick={toggleAllTodos}
-            />
-          )}
+        <Header
+          todos={todos}
+          completedTodos={completedTodos}
+          toggleAllTodos={toggleAllTodos}
+          handleSubmit={handleSubmit}
+          inputRef={inputRef}
+          todoTitle={todoTitle}
+          handleTitleChange={handleTitleChange}
+          isSubmitting={isSubmitting}
+        />
 
-          <form onSubmit={handleSubmit}>
-            <input
-              ref={inputRef}
-              data-cy="NewTodoField"
-              type="text"
-              className="todoapp__new-todo"
-              placeholder="What needs to be done?"
-              value={todoTitle}
-              onChange={handleTitleChange}
-              disabled={isSubmitting}
-            />
-          </form>
-        </header>
-
-        <section className="todoapp__main" data-cy="TodoList">
-          {filteredTodos.map(todo => (
-            <TodoItem
-              key={todo.id}
-              todo={todo}
-              onDelete={deleteTodo}
-              onUpdate={updateTodo}
-              isLoading={loadingIds.includes(todo.id)}
-            />
-          ))}
-          {tempTodo && <TodoItem todo={tempTodo} />}
-        </section>
+        <TodoList
+          filteredTodos={filteredTodos}
+          deleteTodo={deleteTodo}
+          updateTodo={updateTodo}
+          loadingIds={loadingIds}
+          tempTodo={tempTodo}
+        />
 
         {todos.length !== 0 && (
           <Footer
@@ -271,23 +252,10 @@ export const App: React.FC = () => {
         )}
       </div>
 
-      <div
-        data-cy="ErrorNotification"
-        className={classNames(
-          'notification is-danger is-light has-text-weight-normal',
-          {
-            hidden: !errorMessage,
-          },
-        )}
-      >
-        <button
-          data-cy="HideErrorButton"
-          type="button"
-          className="delete"
-          onClick={handleButtonClose}
-        />
-        {errorMessage}
-      </div>
+      <ErrorMessage
+        errorMessage={errorMessage}
+        handleButtonClose={handleButtonClose}
+      />
     </div>
   );
 };
