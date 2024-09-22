@@ -21,11 +21,13 @@ export const TodoItem: React.FC<Props> = ({
 
   const [tempTitle, setTempTitle] = useState(todo.title);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const todoInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    setIsChecked(todo.completed);
-  }, [todo.completed]);
+  // useEffect(() => {
+  //   setIsChecked(todo.completed);
+  // }, [todo.completed]);
 
   useEffect(() => {
     if (isEditing && todoInputRef.current) {
@@ -62,6 +64,12 @@ export const TodoItem: React.FC<Props> = ({
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
+    if (isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
     setIsLocalLoading(true);
 
     if (tempTitle.trim() === todo.title) {
@@ -83,14 +91,19 @@ export const TodoItem: React.FC<Props> = ({
         })
         .finally(() => {
           setIsLocalLoading(false);
+          setIsSubmitting(false);
         });
     } else {
-      onDelete(todo.id)
-        .finally(() => {
-          setIsLocalLoading(false);
-          setIsEditing(false);
-        });
+      onDelete(todo.id).finally(() => {
+        setIsLocalLoading(false);
+        setIsEditing(false);
+        setIsSubmitting(false);
+      });
     }
+  };
+
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    handleSubmit(event);
   };
 
   // #endregion
@@ -151,8 +164,8 @@ export const TodoItem: React.FC<Props> = ({
             placeholder="Empty todo will be deleted"
             value={tempTitle}
             onChange={handleTitleChange}
-            onBlur={handleSubmit}
-            autoFocus
+            onBlur={handleBlur}
+            // autoFocus
           />
         </form>
       )}
