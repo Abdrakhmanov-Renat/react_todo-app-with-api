@@ -25,15 +25,32 @@ export const TodoItem: React.FC<Props> = ({
 
   const todoInputRef = useRef<HTMLInputElement | null>(null);
 
-  // useEffect(() => {
-  //   setIsChecked(todo.completed);
-  // }, [todo.completed]);
+  useEffect(() => {
+    setIsChecked(todo.completed);
+  }, [todo.completed]);
 
   useEffect(() => {
     if (isEditing && todoInputRef.current) {
       todoInputRef.current.focus();
     }
   }, [isEditing]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsEditing(false);
+        setTempTitle(todo.title);
+      }
+    };
+
+    if (isEditing) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isEditing, todo.title]);
 
   // #region eventHandlers
 
@@ -64,6 +81,8 @@ export const TodoItem: React.FC<Props> = ({
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
+    const trimmedTitle = tempTitle.trim();
+
     if (isSubmitting) {
       return;
     }
@@ -72,15 +91,15 @@ export const TodoItem: React.FC<Props> = ({
 
     setIsLocalLoading(true);
 
-    if (tempTitle.trim() === todo.title) {
+    if (trimmedTitle === todo.title) {
       setIsLocalLoading(false);
       setIsEditing(false);
-
+      setIsSubmitting(false);
       return;
     }
 
-    if (tempTitle.trim()) {
-      onUpdate({ ...todo, title: tempTitle })
+    if (trimmedTitle) {
+      onUpdate({ ...todo, title: trimmedTitle })
         .then(() => {
           setIsEditing(false);
         })
@@ -94,11 +113,19 @@ export const TodoItem: React.FC<Props> = ({
           setIsSubmitting(false);
         });
     } else {
-      onDelete(todo.id).finally(() => {
-        setIsLocalLoading(false);
-        setIsEditing(false);
-        setIsSubmitting(false);
-      });
+      onDelete(todo.id)
+        .then(() => {
+          setIsEditing(false);
+        })
+        .catch(() => {
+          if (todoInputRef.current) {
+            todoInputRef.current.focus();
+          }
+        })
+        .finally(() => {
+          setIsLocalLoading(false);
+          setIsSubmitting(false);
+        });
     }
   };
 
@@ -165,7 +192,7 @@ export const TodoItem: React.FC<Props> = ({
             value={tempTitle}
             onChange={handleTitleChange}
             onBlur={handleBlur}
-            // autoFocus
+          // autoFocus
           />
         </form>
       )}

@@ -146,8 +146,9 @@ export const App: React.FC = () => {
           currentTodos.filter(todo => todo.id !== todoId),
         );
       })
-      .catch(() => {
+      .catch((error) => {
         setErrorMessage('Unable to delete a todo');
+        throw error;
       })
       .finally(() => {
         if (inputRef.current) {
@@ -177,6 +178,10 @@ export const App: React.FC = () => {
         setLoadingIds(prevIds =>
           prevIds.filter(id => !completed.some(todo => todo.id === id)),
         );
+
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
       });
   };
 
