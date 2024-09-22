@@ -1,12 +1,12 @@
-import { Todo } from "../../types/Todo";
-import { TodoItem } from "../TodoItem";
+import { Todo } from '../../types/Todo';
+import { TodoItem } from '../TodoItem';
 
 interface Props {
-  filteredTodos: Todo[]
-  deleteTodo: (todoId: number) => Promise<void>
-  updateTodo: (updatedTodo: Todo) => Promise<void>
-  loadingIds: number[]
-  tempTodo: Todo | null
+  filteredTodos: Todo[];
+  deleteTodo: (todoId: number) => Promise<void>;
+  updateTodo: (updatedTodo: Todo) => Promise<void>;
+  loadingIds: number[];
+  tempTodo: Todo | null;
 }
 
 export const TodoList: React.FC<Props> = ({

@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Todo } from '../../types/Todo';
 
 interface Props {
@@ -21,9 +21,17 @@ export const TodoItem: React.FC<Props> = ({
 
   const [tempTitle, setTempTitle] = useState(todo.title);
 
+  const todoInputRef = useRef<HTMLInputElement | null>(null);
+
   useEffect(() => {
     setIsChecked(todo.completed);
   }, [todo.completed]);
+
+  useEffect(() => {
+    if (isEditing && todoInputRef.current) {
+      todoInputRef.current.focus();
+    }
+  }, [isEditing]);
 
   // #region eventHandlers
 
@@ -51,7 +59,9 @@ export const TodoItem: React.FC<Props> = ({
     setTempTitle(event.target.value);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+
     setIsLocalLoading(true);
 
     if (tempTitle.trim() === todo.title) {
@@ -62,16 +72,25 @@ export const TodoItem: React.FC<Props> = ({
     }
 
     if (tempTitle.trim()) {
-      onUpdate({ ...todo, title: tempTitle }).finally(() => {
-        setIsLocalLoading(false);
-      });
+      onUpdate({ ...todo, title: tempTitle })
+        .then(() => {
+          setIsEditing(false);
+        })
+        .catch(() => {
+          if (todoInputRef.current) {
+            todoInputRef.current.focus();
+          }
+        })
+        .finally(() => {
+          setIsLocalLoading(false);
+        });
     } else {
-      onDelete(todo.id).finally(() => {
-        setIsLocalLoading(false);
-      });
+      onDelete(todo.id)
+        .finally(() => {
+          setIsLocalLoading(false);
+          setIsEditing(false);
+        });
     }
-
-    setIsEditing(false);
   };
 
   // #endregion
@@ -125,6 +144,7 @@ export const TodoItem: React.FC<Props> = ({
       ) : (
         <form onSubmit={handleSubmit}>
           <input
+            ref={todoInputRef}
             data-cy="TodoTitleField"
             type="text"
             className="todo__title-field"

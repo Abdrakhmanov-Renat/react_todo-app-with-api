@@ -88,6 +88,11 @@ export const App: React.FC = () => {
       .catch(error => {
         setErrorMessage('Unable to update a todo');
         throw error;
+      })
+      .finally(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
       });
   };
 
@@ -163,6 +168,10 @@ export const App: React.FC = () => {
     )
       .catch(() => {
         setErrorMessage('Unable to delete a todo');
+
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
       })
       .finally(() => {
         setLoadingIds(prevIds =>

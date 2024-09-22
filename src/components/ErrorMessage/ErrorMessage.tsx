@@ -1,8 +1,8 @@
-import classNames from "classnames"
+import classNames from 'classnames';
 
 interface Props {
-  errorMessage: string
-  handleButtonClose: () => void
+  errorMessage: string;
+  handleButtonClose: () => void;
 }
 
 export const ErrorMessage: React.FC<Props> = ({

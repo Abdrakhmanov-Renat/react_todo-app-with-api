@@ -1,15 +1,15 @@
-import classNames from "classnames";
-import { Todo } from "../../types/Todo";
+import classNames from 'classnames';
+import { Todo } from '../../types/Todo';
 
 interface Props {
-  todos: Todo[],
-  completedTodos: Todo[],
-  toggleAllTodos: () => void,
-  handleSubmit: (event: React.FormEvent) => void,
-  inputRef: React.RefObject<HTMLInputElement>,
-  todoTitle: string,
-  handleTitleChange: (event: React.ChangeEvent<HTMLInputElement>) => void,
-  isSubmitting: boolean,
+  todos: Todo[];
+  completedTodos: Todo[];
+  toggleAllTodos: () => void;
+  handleSubmit: (event: React.FormEvent) => void;
+  inputRef: React.RefObject<HTMLInputElement>;
+  todoTitle: string;
+  handleTitleChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  isSubmitting: boolean;
 }
 
 export const Header: React.FC<Props> = ({
